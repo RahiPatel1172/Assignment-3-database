@@ -2,12 +2,12 @@ trigger:
   - main
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'windows-latest'
 
 variables:
-  sqlServerName: '$(SQL_SERVER_NAME)'
-  databaseName: '$(DATABASE_NAME)'
-  sqlUsername: '$(SQL_USERNAME)'
+  sqlServerName: 'localhost'
+  databaseName: 'MovieRecommendationDB'
+  sqlUsername: 'sa'
   sqlPassword: '$(SQL_PASSWORD)'
 
 steps:
