@@ -1,29 +1,31 @@
 -- Create Movies table
-CREATE TABLE Movies (
-    MovieID INT PRIMARY KEY IDENTITY(1,1),
-    Title NVARCHAR(200) NOT NULL,
+CREATE TABLE IF NOT EXISTS Movies (
+    MovieID INT AUTO_INCREMENT PRIMARY KEY,
+    Title VARCHAR(200) NOT NULL,
     ReleaseYear INT NOT NULL,
-    Genre NVARCHAR(100) NOT NULL,
+    Genre VARCHAR(100) NOT NULL,
     Rating DECIMAL(3,1) NOT NULL,
-    Description NVARCHAR(MAX)
+    Description TEXT
 );
 
 -- Create Users table
-CREATE TABLE Users (
-    UserID INT PRIMARY KEY IDENTITY(1,1),
-    Username NVARCHAR(50) NOT NULL UNIQUE,
-    Email NVARCHAR(100) NOT NULL UNIQUE,
+CREATE TABLE IF NOT EXISTS Users (
+    UserID INT AUTO_INCREMENT PRIMARY KEY,
+    Username VARCHAR(50) NOT NULL UNIQUE,
+    Email VARCHAR(100) NOT NULL UNIQUE,
     RegistrationDate DATE NOT NULL
 );
 
--- Create UserRatings table for tracking user ratings
-CREATE TABLE UserRatings (
-    RatingID INT PRIMARY KEY IDENTITY(1,1),
-    UserID INT FOREIGN KEY REFERENCES Users(UserID),
-    MovieID INT FOREIGN KEY REFERENCES Movies(MovieID),
+-- Create UserRatings table
+CREATE TABLE IF NOT EXISTS UserRatings (
+    RatingID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT,
+    MovieID INT,
     Rating INT NOT NULL CHECK (Rating BETWEEN 1 AND 5),
     RatingDate DATE NOT NULL,
-    UNIQUE(UserID, MovieID)
+    UNIQUE(UserID, MovieID),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID),
+    FOREIGN KEY (MovieID) REFERENCES Movies(MovieID)
 );
 
 -- Insert sample data

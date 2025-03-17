@@ -2,12 +2,12 @@ trigger:
   - main
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-latest'
 
 variables:
-  sqlServerName: 'localhost'
-  databaseName: 'MovieRecommendationDB'
-  sqlUsername: 'sa'
+  sqlServerName: '$(SQL_SERVER_NAME)'
+  databaseName: '$(DATABASE_NAME)'
+  sqlUsername: '$(SQL_USERNAME)'
   sqlPassword: '$(SQL_PASSWORD)'
 
 steps:
@@ -16,6 +16,7 @@ steps:
     version: '6.x'
     includePreviewVersions: true
 
+# Step 1: Deploy initial schema
 - task: SqlDeployment@1
   inputs:
     ServerName: $(sqlServerName)
@@ -25,6 +26,7 @@ steps:
     SqlFile: $(Build.SourcesDirectory)/create_table.sql
     QueryTimeout: '60'
 
+# Step 2: Apply schema update
 - task: SqlDeployment@1
   inputs:
     ServerName: $(sqlServerName)
@@ -34,6 +36,7 @@ steps:
     SqlFile: $(Build.SourcesDirectory)/update_table.sql
     QueryTimeout: '60'
 
+# Step 3: Validate schema update
 - task: SqlQuery@1
   inputs:
     ServerName: $(sqlServerName)
@@ -42,17 +45,11 @@ steps:
     SqlPassword: $(sqlPassword)
     QueryType: 'Inline'
     Query: |
+      -- Check if new columns exist in Movies table
       SELECT 
-        m.Title,
-        m.Director,
-        m.Runtime,
-        m.Language,
-        m.StreamingAvailability,
-        u.Username,
-        ur.Rating,
-        ur.RatingDate
-      FROM Movies m
-      JOIN UserRatings ur ON m.MovieID = ur.MovieID
-      JOIN Users u ON ur.UserID = u.UserID
-      ORDER BY ur.RatingDate DESC;
+        COLUMN_NAME,
+        DATA_TYPE
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_NAME = 'Movies'
+      AND COLUMN_NAME IN ('Director', 'Runtime', 'Language', 'StreamingAvailability');
     QueryTimeout: '60' 
