@@ -1,0 +1,58 @@
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  sqlServerName: '$(SQL_SERVER_NAME)'
+  databaseName: '$(DATABASE_NAME)'
+  sqlUsername: '$(SQL_USERNAME)'
+  sqlPassword: '$(SQL_PASSWORD)'
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    version: '6.x'
+    includePreviewVersions: true
+
+- task: SqlDeployment@1
+  inputs:
+    ServerName: $(sqlServerName)
+    DatabaseName: $(databaseName)
+    SqlUsername: $(sqlUsername)
+    SqlPassword: $(sqlPassword)
+    SqlFile: $(Build.SourcesDirectory)/create_table.sql
+    QueryTimeout: '60'
+
+- task: SqlDeployment@1
+  inputs:
+    ServerName: $(sqlServerName)
+    DatabaseName: $(databaseName)
+    SqlUsername: $(sqlUsername)
+    SqlPassword: $(sqlPassword)
+    SqlFile: $(Build.SourcesDirectory)/update_table.sql
+    QueryTimeout: '60'
+
+- task: SqlQuery@1
+  inputs:
+    ServerName: $(sqlServerName)
+    DatabaseName: $(databaseName)
+    SqlUsername: $(sqlUsername)
+    SqlPassword: $(sqlPassword)
+    QueryType: 'Inline'
+    Query: |
+      SELECT 
+        m.Title,
+        m.Director,
+        m.Runtime,
+        m.Language,
+        m.StreamingAvailability,
+        u.Username,
+        ur.Rating,
+        ur.RatingDate
+      FROM Movies m
+      JOIN UserRatings ur ON m.MovieID = ur.MovieID
+      JOIN Users u ON ur.UserID = u.UserID
+      ORDER BY ur.RatingDate DESC;
+    QueryTimeout: '60' 
