@@ -1,16 +1,3 @@
--- Add a new column for department information
-ALTER TABLE Employee
-ADD Department NVARCHAR(50) NULL;
-
--- Update existing records with department information
-UPDATE Employee
-SET Department = 'IT'
-WHERE EmployeeID = 1;
-
-UPDATE Employee
-SET Department = 'HR'
-WHERE EmployeeID = 2;
-
 -- Add new columns to Movies table
 ALTER TABLE Movies
 ADD Director NVARCHAR(100),
