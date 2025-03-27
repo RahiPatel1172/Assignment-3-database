@@ -6,8 +6,6 @@ This repository contains the implementation of database automation using Ansible
 
 ```
 Assignment-4-database/
-├── Question1/
-│   └── question1.md        - Answers for Question 1
 ├── ansible/
 │   ├── up.yaml             - Starts MySQL, initializes the database, and applies migrations
 │   └── down.yaml           - Creates a migration and stops the database
