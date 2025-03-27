@@ -141,6 +141,3 @@ git push
 - The `up.yaml` script is designed to be idempotent, so you can run it multiple times without adverse effects.
 - The `down.yaml` script will only create a new migration file if new subscribers have been added.
 
-## Author
-
-Rahi Patel, Nidhip, Kirti, Raj 
