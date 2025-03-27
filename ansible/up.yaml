@@ -1,0 +1,51 @@
+---
+- name: Deploy MySQL and apply Flyway migrations
+  hosts: localhost
+  vars:
+    mysql_root_password: "mysql@123"
+    flyway_migrations_dir: "../migrations"
+    db_name: "subscribers_db"
+  tasks:
+    - name: Wait for MySQL to be available
+      wait_for:
+        port: 3306
+        delay: 2
+        timeout: 20
+
+    - name: Check if database exists
+      shell: mysql -u root -p{{ mysql_root_password }} -e "SHOW DATABASES LIKE '{{ db_name }}';" | grep -q {{ db_name }}
+      register: db_exists
+      ignore_errors: yes
+      changed_when: false
+      
+    - name: Create database if not exists
+      shell: mysql -u root -p{{ mysql_root_password }} -e "CREATE DATABASE IF NOT EXISTS {{ db_name }};"
+      when: db_exists is failed
+      
+    - name: Ensure migrations directory exists
+      file:
+        path: "{{ flyway_migrations_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Apply Flyway migrations for V1, V2, and V3 only
+      command: >
+        flyway -url=jdbc:mysql://localhost:3306/{{ db_name }}
+        -user=root -password={{ mysql_root_password }}
+        -locations=filesystem:{{ flyway_migrations_dir }}
+        -target=3
+        migrate
+      register: flyway_result
+      ignore_errors: yes
+      changed_when: "'Successfully applied' in flyway_result.stdout"
+
+    - name: Create migration flag file
+      file:
+        path: "{{ flyway_migrations_dir }}/.migrated"
+        state: touch
+      when: flyway_result.rc == 0 or flyway_result.rc == 1
+
+    - name: Run database tests
+      command: python3 ../dbtests.py
+      register: test_result
+      ignore_errors: yes 

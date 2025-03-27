@@ -1,0 +1,51 @@
+---
+- name: Generate migration and stop MySQL
+  hosts: localhost
+  vars:
+    mysql_root_password: "mysql@123"
+    flyway_migrations_dir: "../migrations"
+    db_name: "subscribers_db"
+  tasks:
+    - name: Get current date for version naming
+      ansible.builtin.command: date +%Y%m%d%H%M%S
+      register: current_date
+      changed_when: false
+
+    - name: Get current subscribers data
+      shell: >
+        mysql -u root -p{{ mysql_root_password }} -D {{ db_name }} -e "
+        SELECT * FROM subscribers WHERE subscription_date > (
+          SELECT MAX(subscription_date) FROM subscribers 
+          WHERE email IN ('rahi@example.com', 'nidhip@example.com', 'kirti@example.com', 'raj@example.com')
+        ) OR email NOT IN ('rahi@example.com', 'nidhip@example.com', 'kirti@example.com', 'raj@example.com')
+        " | grep -v email
+      register: new_subscribers
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Create new migration file for data seeding if new subscribers exist
+      copy:
+        dest: "{{ flyway_migrations_dir }}/V{{ current_date.stdout }}__Seed_New_Subscribers.sql"
+        content: |
+          -- Auto-generated migration to seed new subscriber data
+          {% for subscriber in new_subscribers.stdout_lines %}
+          {% set subscriber_data = subscriber.split() %}
+          {% if subscriber_data | length > 0 %}
+          INSERT INTO subscribers (email) VALUES ('{{ subscriber_data[1] }}');
+          {% endif %}
+          {% endfor %}
+      when: new_subscribers.stdout_lines is defined and new_subscribers.stdout_lines | length > 0
+
+    - name: Baseline Flyway migration
+      command: >
+        flyway -url=jdbc:mysql://localhost:3306/{{ db_name }}
+        -user=root -password={{ mysql_root_password }}
+        -locations=filesystem:{{ flyway_migrations_dir }}
+        baseline
+      ignore_errors: yes
+      when: new_subscribers.stdout_lines is defined and new_subscribers.stdout_lines | length > 0
+
+    - name: Remove migration flag file
+      file:
+        path: "{{ flyway_migrations_dir }}/.migrated"
+        state: absent 
