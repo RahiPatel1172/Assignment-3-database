@@ -6,17 +6,19 @@ This repository contains the implementation of database automation using Ansible
 
 ```
 Assignment-4-database/
+├── Question1/
+│   └── question1.md        - Answers for Question 1
 ├── ansible/
-│   ├── up.yaml       - Starts MySQL, initializes the database, and applies migrations
-│   └── down.yaml     - Creates a migration and stops the database
+│   ├── up.yaml             - Starts MySQL, initializes the database, and applies migrations
+│   └── down.yaml           - Creates a migration and stops the database
 ├── migrations/
 │   ├── V1__create_subscribers.sql       - Creates the subscribers table
 │   ├── V2__Add_Subscription_Date.sql    - Adds the subscription_date column
-│   └── V3__Seed_Initial_Data.sql        - Seeds initial subscriber data
+│   ├── V3__Seed_Initial_Data.sql        - Seeds initial subscriber data
+│   └── V*__Seed_New_Subscribers.sql     - Auto-generated migrations for new subscribers
 ├── tests/
-│   └── dbtests.py    - Tests for validating the schema structure
-├── dbtests.py        - Main test file for database validation
-├── Question1/        - Contains the answers for Question 1
+│   └── dbtests.py          - Tests for validating the schema structure
+├── dbtests.py              - Main test file for database validation
 └── README.md
 ```
 
@@ -62,7 +64,7 @@ Assignment-4-database/
    ```bash
    sudo mysql -u root -p
    # Inside MySQL prompt
-   ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'secret';
+   ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'mysql@123';
    FLUSH PRIVILEGES;
    exit;
    ```
@@ -85,13 +87,13 @@ This script is idempotent - it can be run multiple times without changing the re
 Run the tests to validate that the schema is correctly set up:
 
 ```bash
-python dbtests.py
+python3 dbtests.py
 ```
 
 Or using pytest:
 
 ```bash
-pytest -v dbtests.py
+python3 -m pytest dbtests.py -v
 ```
 
 ### 3. Add New Subscribers
@@ -135,7 +137,7 @@ git push
 
 ## Notes
 
-- The MySQL root password is set to "secret" in this implementation. For a production environment, use a secure password and consider using environment variables or a secret management tool.
+- The MySQL root password is set to "mysql@123" in this implementation. For a production environment, use a secure password and consider using environment variables or a secret management tool.
 - The `up.yaml` script is designed to be idempotent, so you can run it multiple times without adverse effects.
 - The `down.yaml` script will only create a new migration file if new subscribers have been added.
 
